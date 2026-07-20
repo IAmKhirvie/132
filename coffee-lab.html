@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Lab • Build Like Starbucks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Inter:wght@400;500;600&amp;display=swap');
+        
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .heading-font { font-family: 'Playfair Display', Georgia, serif; }
+
+        .coffee-cup {
+            width: 110px; height: 125px; background: linear-gradient(#3C2F2F, #2C2424);
+            border: 10px solid #2C2424; border-radius: 0 0 45px 45px; position: relative;
+            box-shadow: 0 10px 15px -5px rgb(0 0 0 / 0.15), inset 0 0 0 7px #1F1A1A,
+                        inset 0 18px 18px -12px rgba(255,255,255,0.12); margin: 0 auto; overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .coffee-cup.iced { background: linear-gradient(#4A6B8C, #3A5A7C); border-color: #3A5A7C; box-shadow: 0 10px 15px -5px rgb(0 0 0 / 0.15), inset 0 0 0 7px #2E4B63; }
+        .coffee-cup.iced .coffee-liquid { box-shadow: inset 0 8px 10px rgba(255,255,255,0.2); }
+
+        .coffee-liquid {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+            box-shadow: inset 0 15px 15px rgba(0,0,0,0.35);
+        }
+        .coffee-foam {
+            position: absolute; bottom: 0; left: 0; width: 100%; background: #EDE0D4;
+            transition: height 0.4s ease; box-shadow: 0 -3px 6px rgba(0,0,0,0.1);
+        }
+        .coffee-foam.bubbles {
+            background: repeating-radial-gradient(circle, #EDE0D4, #EDE0D4 3px, #D4C3A8 4px, #EDE0D4 7px);
+        }
+        .cup-handle {
+            position: absolute; right: -18px; top: 26px; width: 26px; height: 42px;
+            border: 8px solid #2C2424; border-radius: 50%; border-left: none;
+        }
+        .layer { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .ingredient-btn { transition: all 0.15s ease; }
+        .ingredient-btn.active {
+            background-color: #6B4E31; color: white; border-color: #6B4E31; transform: translateY(-1px);
+        }
+
+        .starbucks-drink {
+            transition: all 0.2s ease;
+        }
+        .starbucks-drink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .preview-layer {
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .recipe-step {
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-[#F8F1E9] text-[#3C2F2F]">
+    <div class="max-w-6xl mx-auto px-6 pt-8">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-x-4">
+                <div class="w-12 h-12 bg-[#6B4E31] rounded-3xl flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-mug-hot text-white text-4xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-5xl font-bold tracking-tighter heading-font">Coffee Lab</h1>
+                    <p class="text-[#6B4E31] -mt-1">Build exactly like Starbucks • Learn every drink</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-x-3">
+                <button onclick="showSavedRecipes()" 
+                        class="flex items-center gap-x-2 px-5 py-2.5 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-3xl text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-bookmark"></i>
+                    <span>My Recipes</span>
+                </button>
+                <button onclick="resetAll()" 
+                        class="flex items-center gap-x-2 px-5 py-2.5 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-3xl text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-undo"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Starbucks Quick Menu -->
+        <div class="mb-8">
+            <div class="flex items-center gap-x-2 mb-3 px-1">
+                <i class="fa-solid fa-star text-[#6B4E31]"></i>
+                <span class="font-semibold text-lg">Starbucks Favorites</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                <button onclick="loadStarbucksDrink('latte')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Caffè Latte</div>
+                    <div class="text-xs text-[#6B4E31]">Espresso + lots steamed milk + light foam</div>
+                </button>
+                <button onclick="loadStarbucksDrink('cappuccino')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Cappuccino</div>
+                    <div class="text-xs text-[#6B4E31]">Espresso + milk + thick foam (equal parts)</div>
+                </button>
+                <button onclick="loadStarbucksDrink('mocha')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Caffè Mocha</div>
+                    <div class="text-xs text-[#6B4E31]">Latte + mocha sauce + whipped cream</div>
+                </button>
+                <button onclick="loadStarbucksDrink('flatwhite')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Flat White</div>
+                    <div class="text-xs text-[#6B4E31]">Ristretto + velvety steamed milk (minimal foam)</div>
+                </button>
+                <button onclick="loadStarbucksDrink('caramelmacchiato')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Caramel Macchiato</div>
+                    <div class="text-xs text-[#6B4E31]">Vanilla + espresso + milk + caramel drizzle</div>
+                </button>
+                <button onclick="loadStarbucksDrink('americano')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Caffè Americano</div>
+                    <div class="text-xs text-[#6B4E31]">Espresso + hot water</div>
+                </button>
+                <button onclick="loadStarbucksDrink('coldbrew')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Cold Brew</div>
+                    <div class="text-xs text-[#6B4E31]">Slow-steeped + milk or sweet cream</div>
+                </button>
+                <button onclick="loadStarbucksDrink('vanillasweetcream')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Vanilla Sweet Cream Cold Brew</div>
+                    <div class="text-xs text-[#6B4E31]">Cold brew + vanilla + vanilla sweet cream</div>
+                </button>
+                <button onclick="loadStarbucksDrink('icedlatte')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Iced Caffè Latte</div>
+                    <div class="text-xs text-[#6B4E31]">Espresso + milk over ice</div>
+                </button>
+                <button onclick="loadStarbucksDrink('whitemocha')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">White Mocha</div>
+                    <div class="text-xs text-[#6B4E31]">White chocolate mocha + whip</div>
+                </button>
+                <button onclick="loadStarbucksDrink('icedcaramelmac')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Iced Caramel Macchiato</div>
+                    <div class="text-xs text-[#6B4E31]">Vanilla + espresso + milk + caramel drizzle</div>
+                </button>
+                <button onclick="loadStarbucksDrink('toffeelatte')" class="starbucks-drink text-left px-3 py-2 bg-white hover:bg-[#F8F1E9] border border-[#EDE0D4] rounded-2xl text-sm">
+                    <div class="font-semibold">Toffee Nut Latte</div>
+                    <div class="text-xs text-[#6B4E31]">Toffee nut + espresso + milk (oat shown)</div>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Builder -->
+            <div class="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-[#EDE0D4]">
+                <div class="mb-6">
+                    <h3 class="font-semibold text-xl mb-1">Build Your Drink From Scratch</h3>
+                    <p class="text-sm text-[#6B4E31]">Click beans (adds the powder/grounds), add water (little = espresso, more = americano), add sugar, milk, etc. Watch it become whatever you create.</p>
+                </div>
+
+                <!-- Coffee Beans -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-seedling text-[#6B4E31]"></i>
+                        <span class="font-semibold">1. Coffee Beans</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                        <button onclick="selectBeans('arabica')" id="beans-arabica"
+                                class="beans-btn text-left p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4] bg-[#F8F1E9]">
+                            <div class="font-semibold text-sm">Arabica</div>
+                            <div class="text-xs text-[#6B4E31]">Smooth, sweet, floral</div>
+                        </button>
+                        <button onclick="selectBeans('robusta')" id="beans-robusta"
+                                class="beans-btn text-left p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <div class="font-semibold text-sm">Robusta</div>
+                            <div class="text-xs text-[#6B4E31]">Bold, bitter, strong</div>
+                        </button>
+                        <button onclick="selectBeans('ethiopian')" id="beans-ethiopian"
+                                class="beans-btn text-left p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <div class="font-semibold text-sm">Ethiopian</div>
+                            <div class="text-xs text-[#6B4E31]">Fruity, berry, winey</div>
+                        </button>
+                        <button onclick="selectBeans('colombian')" id="beans-colombian"
+                                class="beans-btn text-left p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <div class="font-semibold text-sm">Colombian</div>
+                            <div class="text-xs text-[#6B4E31]">Balanced, nutty, caramel</div>
+                        </button>
+                        <button onclick="selectBeans('brazilian')" id="beans-brazilian"
+                                class="beans-btn text-left p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <div class="font-semibold text-sm">Brazilian</div>
+                            <div class="text-xs text-[#6B4E31]">Chocolatey, nutty, smooth</div>
+                        </button>
+                        <button onclick="selectBeans('sumatran')" id="beans-sumatran"
+                                class="beans-btn text-left p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <div class="font-semibold text-sm">Sumatran</div>
+                            <div class="text-xs text-[#6B4E31]">Earthy, herbal, full body</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Base -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-mug-hot text-[#6B4E31]"></i>
+                        <span class="font-semibold">2. Base</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                        <button onclick="selectBase('espresso')" id="base-espresso" class="base-btn flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4] bg-[#F8F1E9]">
+                            <i class="fa-solid fa-mug-hot text-[#6B4E31]"></i>
+                            <div><div class="font-semibold text-sm">Espresso</div><div class="text-xs">2 shots • 1.5 oz</div></div>
+                        </button>
+                        <button onclick="selectBase('brewed')" id="base-brewed" class="base-btn flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <i class="fa-solid fa-mug-hot"></i>
+                            <div><div class="font-semibold text-sm">Brewed Coffee</div><div class="text-xs">8 oz drip</div></div>
+                        </button>
+                        <button onclick="selectBase('coldbrew')" id="base-coldbrew" class="base-btn flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <i class="fa-solid fa-mug-hot"></i>
+                            <div><div class="font-semibold text-sm">Cold Brew</div><div class="text-xs">Smooth concentrate</div></div>
+                        </button>
+                        <button onclick="selectBase('americano')" id="base-americano" class="base-btn flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <i class="fa-solid fa-mug-hot"></i>
+                            <div><div class="font-semibold text-sm">Americano</div><div class="text-xs">Espresso + Water</div></div>
+                        </button>
+                        <button onclick="selectBase('ristretto')" id="base-ristretto" class="base-btn flex items-center gap-3 p-3 rounded-2xl border border-transparent hover:border-[#EDE0D4]">
+                            <i class="fa-solid fa-mug-hot"></i>
+                            <div><div class="font-semibold text-sm">Ristretto</div><div class="text-xs">Short espresso</div></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Size (Starbucks sizes affect standard milk & pumps) -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-coffee text-[#6B4E31]"></i>
+                        <span class="font-semibold">Size</span>
+                        <span class="text-xs px-2 py-0.5 bg-[#F8F1E9] rounded">Affects milk amount &amp; recommended pumps</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="setSize('tall')" id="size-tall" class="size-btn px-4 py-1.5 text-sm rounded-2xl border hover:border-[#6B4E31]">Tall (12oz)</button>
+                        <button onclick="setSize('grande')" id="size-grande" class="size-btn px-4 py-1.5 text-sm rounded-2xl border ring-2 ring-[#6B4E31] border-[#6B4E31]">Grande (16oz)</button>
+                        <button onclick="setSize('venti')" id="size-venti" class="size-btn px-4 py-1.5 text-sm rounded-2xl border hover:border-[#6B4E31]">Venti (20oz)</button>
+                    </div>
+                </div>
+
+                <!-- Shots -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-tachometer-alt text-[#6B4E31]"></i>
+                        <span class="font-semibold">Espresso Shots</span>
+                        <span class="text-xs px-2 py-0.5 bg-[#F8F1E9] rounded">~0.75 oz per shot</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="adjustShots(-1)" class="w-8 h-8 flex items-center justify-center border rounded-2xl text-lg leading-none hover:bg-[#F8F1E9]">-</button>
+                        <div class="font-semibold text-lg w-8 text-center" id="shots-count">2</div>
+                        <button onclick="adjustShots(1)" class="w-8 h-8 flex items-center justify-center border rounded-2xl text-lg leading-none hover:bg-[#F8F1E9]">+</button>
+                        <span class="text-xs text-[#6B4E31]">shots</span>
+                    </div>
+                </div>
+
+                <!-- Brew Water & Sweetener (build your own) -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-tint text-[#6B4E31]"></i>
+                        <span class="font-semibold">Brew Water &amp; Sweetener</span>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <!-- Dilution Water -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <div>Hot Water Added</div>
+                                <div><span id="water-oz-value">0</span> fl oz</div>
+                            </div>
+                            <input type="range" min="0" max="16" step="0.5" value="0" id="water-slider"
+                                   class="w-full accent-[#6B4E31]" oninput="updateWaterFromSlider()">
+                            <div class="flex gap-1 text-[10px] text-[#6B4E31] mt-0.5">
+                                <span class="cursor-pointer" onclick="setWater(0)">Espresso (none)</span>
+                                <span class="cursor-pointer" onclick="setWater(6)">→ Americano</span>
+                                <span class="cursor-pointer" onclick="setWater(12)">Lots</span>
+                            </div>
+                        </div>
+
+                        <!-- Sugar -->
+                        <div class="flex items-center gap-2">
+                            <span>Sugar</span>
+                            <button onclick="adjustSugar(-1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                            <span id="sugar-tsp" class="w-6 text-center font-medium">0</span>
+                            <span>tsp</span>
+                            <button onclick="adjustSugar(1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            <span class="text-xs text-[#6B4E31]">(makes it sweetened)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Milk & Foam -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-tint text-[#C4A484]"></i>
+                        <span class="font-semibold">3. Milk &amp; Foam</span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="text-xs text-[#6B4E31] mb-1">Milk Type</div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                            <button onclick="setMilkType('none')" id="milk-none" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">None</button>
+                            <button onclick="setMilkType('whole')" id="milk-whole" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">Whole Milk</button>
+                            <button onclick="setMilkType('two')" id="milk-two" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">2% Milk</button>
+                            <button onclick="setMilkType('nonfat')" id="milk-nonfat" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">Nonfat Milk</button>
+                            <button onclick="setMilkType('oat')" id="milk-oat" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">Oat Milk</button>
+                            <button onclick="setMilkType('almond')" id="milk-almond" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">Almond Milk</button>
+                            <button onclick="setMilkType('coconut')" id="milk-coconut" class="milk-btn px-3 py-2 text-sm rounded-2xl border text-left">Coconut Milk</button>
+                        </div>
+                        
+                        <div class="px-1">
+                            <div class="flex justify-between text-xs mb-1">
+                                <div>Milk Volume</div>
+                                <div><span id="milk-oz-value">12.0</span> fl oz</div>
+                            </div>
+                            <input type="range" min="0" max="18" step="0.5" value="12" id="milk-slider" 
+                                   class="w-full accent-[#6B4E31]" oninput="updateMilkOzFromSlider()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 px-1">
+                            <div>Foam Level</div>
+                            <div id="foam-level-label">Microfoam</div>
+                        </div>
+                        <input type="range" min="0" max="100" step="10" value="30" id="foam-slider" 
+                               class="w-full accent-[#6B4E31]" oninput="updateRecipe()">
+                    </div>
+                </div>
+
+                <!-- Powders & Dry Add-ins -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-mortar-pestle text-[#6B4E31]"></i>
+                        <span class="font-semibold">5. Powders &amp; Dry Add-ins</span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span>Milk Powder</span>
+                            <button onclick="adjustPowder('milkPowderTbsp', -0.5)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                            <span id="powder-milkPowderTbsp" class="w-8 text-center font-medium">0</span>
+                            <span>tbsp</span>
+                            <button onclick="adjustPowder('milkPowderTbsp', 0.5)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                        </div>
+                        <div class="text-xs text-[#6B4E31] self-center">Great in Americanos or for travel</div>
+                    </div>
+                </div>
+
+                <!-- Syrups -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-x-2 mb-2">
+                        <i class="fa-solid fa-flask text-[#6B4E31]"></i>
+                        <span class="font-semibold">6. Syrups (Pumps)</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Vanilla</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('vanilla', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-vanilla" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('vanilla', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Caramel</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('caramel', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-caramel" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('caramel', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Mocha / Chocolate</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('mocha', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-mocha" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('mocha', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">White Mocha</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('white-mocha', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-white-mocha" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('white-mocha', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Hazelnut</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('hazelnut', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-hazelnut" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('hazelnut', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Cinnamon Dolce</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('cinnamon-dolce', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-cinnamon-dolce" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('cinnamon-dolce', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Toffee Nut</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('toffee-nut', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-toffee-nut" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('toffee-nut', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Peppermint</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSyrup('peppermint', -1)" class="w-6 h-6 text-lg leading-none border rounded">-</button>
+                                <span id="syrup-peppermint" class="w-6 text-center font-medium">0</span>
+                                <button onclick="adjustSyrup('peppermint', 1)" class="w-6 h-6 text-lg leading-none border rounded">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toppings & Extras -->
+                <div>
+                    <div class="text-xs font-semibold tracking-wider text-[#6B4E31] mb-2">7. TOPPINGS &amp; CUSTOMIZATIONS</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="toggleExtra('ice')" id="extra-ice"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Iced</button>
+                        <button onclick="toggleExtra('whip')" id="extra-whip"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Whipped Cream</button>
+                        <button onclick="toggleExtra('drizzle')" id="extra-drizzle"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Caramel Drizzle</button>
+                        <button onclick="toggleExtra('chocolate-drizzle')" id="extra-chocolate-drizzle"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Mocha Drizzle</button>
+                        <button onclick="toggleExtra('extra-shot')" id="extra-extra-shot"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Extra Shot</button>
+                        <button onclick="toggleExtra('decaf')" id="extra-decaf"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Decaf</button>
+                        <button onclick="toggleExtra('half-sweet')" id="extra-half-sweet"
+                                class="extra-btn px-3 py-1 text-sm border border-[#EDE0D4] hover:bg-[#F8F1E9] rounded-2xl">Half Sweet</button>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button onclick="brewCoffee()" 
+                            class="w-full bg-[#6B4E31] hover:bg-[#3C2F2F] transition-all text-white font-semibold text-lg py-3.5 rounded-3xl flex items-center justify-center gap-x-3">
+                        <i class="fa-solid fa-mug-hot"></i>
+                        <span>BREW &amp; SEE INSTRUCTIONS</span>
+                    </button>
+                    <div class="text-center text-xs text-[#6B4E31] mt-1.5">See exact Starbucks-style recipe + how to customize</div>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="lg:col-span-5 bg-white rounded-3xl p-4 shadow-sm border border-[#EDE0D4] lg:sticky lg:top-6 lg:self-start">
+                <div class="mb-2 flex justify-between items-end">
+                    <div>
+                        <div class="font-semibold text-sm">Live Preview</div>
+                        <div id="drink-name" class="font-bold text-xl text-[#6B4E31]">Custom Latte</div>
+                        <div id="preview-size" class="text-xs text-[#6B4E31] -mt-0.5"></div>
+                    </div>
+                    <div id="starbucks-name" class="text-xs px-2 py-0.5 bg-[#F8F1E9] rounded-2xl text-[#6B4E31]">
+                        Starbucks-style
+                    </div>
+                </div>
+
+                <div class="flex justify-center mb-3">
+                    <div class="cup-container">
+                        <div class="coffee-cup" id="coffee-cup">
+                            <div class="cup-handle"></div>
+                            <div id="coffee-liquid" class="coffee-liquid layer" style="height: 68%"></div>
+                            <div id="coffee-grounds" class="absolute bottom-0 left-0 w-full pointer-events-none" style="height: 18%; background: linear-gradient(#3a2a22, transparent); opacity: 0.65; border-radius: 0 0 40px 40px;"></div>
+                            <div id="coffee-foam" class="coffee-foam layer" style="height: 18%"></div>
+                            <div id="whip-cream" class="hidden absolute top-[10%] left-1/2 -translate-x-1/2 w-[78%] h-3 bg-white rounded-full opacity-90" style="box-shadow: 0 1px 2px rgba(0,0,0,0.1);"></div>
+                            <div id="drizzle" class="hidden absolute inset-x-[12%] top-[12%] h-[2px] bg-[#4A3728] opacity-80 rounded-full"></div>
+                            <div id="ice-cubes" class="hidden absolute inset-x-[18%] top-[26%] h-[36%] pointer-events-none" style="background: repeating-linear-gradient(125deg, rgba(180,215,255,0.65) 0 4px, transparent 4px 10px); border-radius: 6px; z-index: 2;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1.5 text-[10px]">
+                    <div class="bg-[#F8F1E9] rounded-xl p-1.5 text-center">
+                        <div class="text-[#6B4E31]">Beans</div>
+                        <div id="preview-beans" class="font-semibold text-xs">Arabica</div>
+                    </div>
+                    <div class="bg-[#F8F1E9] rounded-xl p-1.5 text-center">
+                        <div class="text-[#6B4E31]">Milk</div>
+                        <div id="preview-milk" class="font-semibold text-xs">Whole</div>
+                    </div>
+                    <div class="bg-[#F8F1E9] rounded-xl p-1.5 text-center">
+                        <div class="text-[#6B4E31]">Concentrate</div>
+                        <div id="preview-shots" class="font-semibold text-xs">2 × 0.75oz</div>
+                    </div>
+                </div>
+
+                <div id="build-status" class="mt-1 text-[10px] text-center text-[#6B4E31] font-medium"></div>
+            </div>
+
+            <!-- Live Recipe -->
+            <div class="lg:col-span-12 bg-white rounded-3xl p-6 shadow-sm border border-[#EDE0D4]">
+                <div class="grid md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="font-semibold">Your Custom Drink</div>
+                            <button onclick="saveRecipe()" class="text-sm flex items-center gap-1.5 text-[#6B4E31] hover:text-[#3C2F2F]">
+                                <i class="fa-solid fa-bookmark"></i>
+                                <span>Save Recipe</span>
+                            </button>
+                        </div>
+                        <div id="recipe-ingredients" class="text-sm space-y-1"></div>
+                    </div>
+
+                    <div>
+                        <div class="font-semibold mb-2">How to Make It (Starbucks Style)</div>
+                        <div id="recipe-steps" class="text-sm space-y-1"></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-[#EDE0D4] text-sm">
+                    <div class="font-semibold mb-1">How to order this at Starbucks:</div>
+                    <div id="starbucks-order" class="text-[#6B4E31]"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brew Modal -->
+    <div id="brew-modal" onclick="closeBrewModal()" class="hidden fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-[999]">
+        <div onclick="event.stopImmediatePropagation()" class="bg-white w-full md:w-[460px] rounded-t-3xl md:rounded-3xl p-6">
+            <div class="flex justify-between mb-4">
+                <div>
+                    <div class="font-bold text-xl" id="modal-name"></div>
+                    <div class="text-sm text-[#6B4E31]" id="modal-subtitle"></div>
+                </div>
+                <button onclick="closeBrewModal()" class="text-2xl leading-none text-gray-400">×</button>
+            </div>
+
+            <div class="mb-5">
+                <div class="font-medium mb-2 text-sm">Barista Steps</div>
+                <div id="modal-steps" class="space-y-2 text-sm"></div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeBrewModal()" class="flex-1 py-3 rounded-3xl bg-[#F8F1E9] font-medium">Close</button>
+                <button onclick="saveCurrentFromModal()" class="flex-1 py-3 rounded-3xl bg-[#6B4E31] text-white font-medium">Save This Recipe</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind config
+        function initTailwind() {
+            // Already using CDN
+        }
+
+        // State - using real world measurements
+        let currentRecipe = {
+            beans: 'arabica',
+            base: 'espresso',
+            size: 'grande',
+            shots: 2,
+            dilutionWaterOz: 0,
+            milkType: 'whole',
+            milkOz: 12,
+            foam: 25,
+            milkPowderTbsp: 0,
+            sugarTsp: 0,
+            syrups: { vanilla: 0, caramel: 0, mocha: 0, 'white-mocha': 0, hazelnut: 0, 'cinnamon-dolce': 0, 'toffee-nut': 0, peppermint: 0 },
+            extras: { whip: false, drizzle: false, 'chocolate-drizzle': false, 'extra-shot': false, decaf: false, 'half-sweet': false, ice: false }
+        };
+
+        const SHOT_OZ = 0.75;
+        const PUMP_OZ = 0.25;
+
+        let savedRecipes = JSON.parse(localStorage.getItem('coffeeLabStarbucksRecipes') || '[]');
+
+        // Starbucks drink definitions - realistic measurements (Grande)
+        const starbucksDrinks = {
+            latte: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 12, foam: 15, milkPowderTbsp: 0, syrups: {}, extras: {} },
+            cappuccino: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 6, foam: 55, milkPowderTbsp: 0, syrups: {}, extras: {} },
+            mocha: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 11, foam: 15, milkPowderTbsp: 0, syrups: { mocha: 4 }, extras: { whip: true } },
+            flatwhite: { beans: 'arabica', base: 'ristretto', shots: 2, milkType: 'whole', milkOz: 10, foam: 8, milkPowderTbsp: 0, syrups: {}, extras: {} },
+            caramelmacchiato: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 11, foam: 15, milkPowderTbsp: 0, syrups: { vanilla: 4, caramel: 4 }, extras: { drizzle: true } },
+            americano: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'none', milkOz: 0, foam: 0, milkPowderTbsp: 0, syrups: {}, extras: {} },
+            coldbrew: { beans: 'colombian', base: 'coldbrew', shots: 0, milkType: 'whole', milkOz: 6, foam: 0, milkPowderTbsp: 0, syrups: {}, extras: {} },
+            vanillasweetcream: { beans: 'colombian', base: 'coldbrew', shots: 0, milkType: 'whole', milkOz: 6, foam: 0, milkPowderTbsp: 0, syrups: { vanilla: 5 }, extras: {} },
+            icedlatte: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 10, foam: 5, milkPowderTbsp: 0, syrups: {}, extras: { ice: true } },
+            whitemocha: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 11, foam: 15, milkPowderTbsp: 0, syrups: { 'white-mocha': 4 }, extras: { whip: true } },
+            icedcaramelmac: { beans: 'arabica', base: 'espresso', shots: 2, milkType: 'whole', milkOz: 9, foam: 0, milkPowderTbsp: 0, syrups: { vanilla: 4, caramel: 4 }, extras: { ice: true, drizzle: true } },
+            toffeelatte: { beans: 'sumatran', base: 'espresso', shots: 2, milkType: 'oat', milkOz: 11, foam: 15, milkPowderTbsp: 0, syrups: { 'toffee-nut': 4 }, extras: {} }
+        };
+
+        function selectBeans(beanType) {
+            document.querySelectorAll('.beans-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+            document.getElementById('beans-' + beanType).classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+            currentRecipe.beans = beanType;
+            updateRecipe();
+        }
+
+        function selectBase(baseType) {
+            document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+            const btn = document.getElementById('base-' + baseType);
+            if (btn) btn.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+            currentRecipe.base = baseType;
+
+            // When picking americano manually, give it some water so it feels like "added more"
+            if (baseType === 'americano' && (currentRecipe.dilutionWaterOz || 0) < 4) {
+                currentRecipe.dilutionWaterOz = 8;
+                const ws = document.getElementById('water-slider');
+                if (ws) ws.value = 8;
+                const wv = document.getElementById('water-oz-value');
+                if (wv) wv.textContent = '8.0';
+            }
+            if (baseType === 'espresso' && (currentRecipe.dilutionWaterOz || 0) > 2) {
+                currentRecipe.dilutionWaterOz = 0;
+                const ws = document.getElementById('water-slider');
+                if (ws) ws.value = 0;
+                const wv = document.getElementById('water-oz-value');
+                if (wv) wv.textContent = '0.0';
+            }
+
+            updateRecipe();
+        }
+
+        function setSize(size) {
+            currentRecipe.size = size;
+            // Adjust "standard" milk volume for realism (Grande baseline)
+            const sizeMap = { tall: 8, grande: 12, venti: 15 };
+            if (!currentRecipe.extras.ice) {
+                currentRecipe.milkOz = sizeMap[size] || 12;
+            } else {
+                currentRecipe.milkOz = Math.round((sizeMap[size] || 12) * 0.85);
+            }
+
+            const slider = document.getElementById('milk-slider');
+            if (slider) slider.value = currentRecipe.milkOz;
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = (currentRecipe.milkOz || 0).toFixed(1);
+
+            // Highlight active size
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+            const sbtn = document.getElementById('size-' + size);
+            if (sbtn) sbtn.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+
+            updateRecipe();
+        }
+
+        function setMilk(milkType, starterOz) {
+            // Legacy wrapper (for any old references)
+            currentRecipe.milkType = milkType;
+            if (starterOz !== undefined) currentRecipe.milkOz = starterOz;
+            if (milkType === 'none') currentRecipe.milkOz = 0;
+
+            document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const activeBtn = document.getElementById('milk-' + milkType);
+            if (activeBtn) activeBtn.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            const slider = document.getElementById('milk-slider');
+            if (slider) slider.value = currentRecipe.milkOz || 0;
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = (currentRecipe.milkOz || 0).toFixed(1);
+            updateRecipe();
+        }
+
+        function adjustSyrup(type, delta) {
+            if (!currentRecipe.syrups[type]) currentRecipe.syrups[type] = 0;
+            currentRecipe.syrups[type] = Math.max(0, Math.min(8, currentRecipe.syrups[type] + delta));
+            const el = document.getElementById('syrup-' + type);
+            const pumps = currentRecipe.syrups[type];
+            if (el) el.textContent = pumps + (pumps > 0 ? ` (~${(pumps * PUMP_OZ).toFixed(1)}oz)` : '');
+            updateRecipe();
+        }
+
+        function toggleExtra(extra) {
+            currentRecipe.extras[extra] = !currentRecipe.extras[extra];
+            const btn = document.getElementById('extra-' + extra);
+            if (btn) {
+                btn.classList.toggle('bg-[#6B4E31]', currentRecipe.extras[extra]);
+                btn.classList.toggle('text-white', currentRecipe.extras[extra]);
+            }
+            updateRecipe();
+        }
+
+        function adjustShots(delta) {
+            currentRecipe.shots = Math.max(0, Math.min(6, (currentRecipe.shots || 2) + delta));
+            const el = document.getElementById('shots-count');
+            if (el) el.textContent = currentRecipe.shots;
+            updateRecipe();
+        }
+
+        function setMilkType(milkType) {
+            currentRecipe.milkType = milkType;
+            if (milkType === 'none') {
+                currentRecipe.milkOz = 0;
+            } else if ((currentRecipe.milkOz || 0) < 2) {
+                // give a sensible starting volume based on size
+                const sizeMap = { tall: 8, grande: 12, venti: 15 };
+                currentRecipe.milkOz = sizeMap[currentRecipe.size] || 10;
+            }
+
+            // Update milk buttons
+            document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const activeBtn = document.getElementById('milk-' + milkType);
+            if (activeBtn) activeBtn.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            // sync slider + label
+            const slider = document.getElementById('milk-slider');
+            if (slider) slider.value = currentRecipe.milkOz || 0;
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = (currentRecipe.milkOz || 0).toFixed(1);
+
+            updateRecipe();
+        }
+
+        function updateMilkOzFromSlider() {
+            const slider = document.getElementById('milk-slider');
+            currentRecipe.milkOz = parseFloat(slider.value) || 0;
+
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = currentRecipe.milkOz.toFixed(1);
+
+            // if user sets volume >0 but type=none, switch to whole automatically
+            if (currentRecipe.milkOz > 0 && currentRecipe.milkType === 'none') {
+                currentRecipe.milkType = 'whole';
+                document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+                const wb = document.getElementById('milk-whole');
+                if (wb) wb.classList.add('ring-2', 'ring-[#6B4E31]');
+            }
+            if (currentRecipe.milkOz === 0 && currentRecipe.milkType !== 'none') {
+                currentRecipe.milkType = 'none';
+                document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+                const nb = document.getElementById('milk-none');
+                if (nb) nb.classList.add('ring-2', 'ring-[#6B4E31]');
+            }
+
+            updateRecipe();
+        }
+
+        function adjustPowder(type, delta) {
+            if (typeof currentRecipe[type] !== 'number') currentRecipe[type] = 0;
+            currentRecipe[type] = Math.max(0, Math.min(6, parseFloat((currentRecipe[type] + delta).toFixed(1))));
+            const el = document.getElementById('powder-' + type);
+            if (el) el.textContent = currentRecipe[type];
+            updateRecipe();
+        }
+
+        function updateWaterFromSlider() {
+            const slider = document.getElementById('water-slider');
+            currentRecipe.dilutionWaterOz = parseFloat(slider.value) || 0;
+
+            const valEl = document.getElementById('water-oz-value');
+            if (valEl) valEl.textContent = currentRecipe.dilutionWaterOz.toFixed(1);
+
+            // Auto adjust base if it makes sense
+            if (currentRecipe.dilutionWaterOz > 3 && currentRecipe.base !== 'americano' && currentRecipe.base !== 'brewed') {
+                currentRecipe.base = 'americano';
+                document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+                const ab = document.getElementById('base-americano');
+                if (ab) ab.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+            }
+
+            updateRecipe();
+        }
+
+        function setWater(oz) {
+            currentRecipe.dilutionWaterOz = oz;
+            const slider = document.getElementById('water-slider');
+            if (slider) slider.value = oz;
+            const valEl = document.getElementById('water-oz-value');
+            if (valEl) valEl.textContent = oz.toFixed(1);
+
+            if (oz > 3 && currentRecipe.base !== 'americano') {
+                currentRecipe.base = 'americano';
+                document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+                const ab = document.getElementById('base-americano');
+                if (ab) ab.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+            }
+            updateRecipe();
+        }
+
+        function adjustSugar(delta) {
+            currentRecipe.sugarTsp = Math.max(0, Math.min(8, (currentRecipe.sugarTsp || 0) + delta));
+            const el = document.getElementById('sugar-tsp');
+            if (el) el.textContent = currentRecipe.sugarTsp;
+            updateRecipe();
+        }
+
+        function updateSlidersUI() {
+            const milkSlider = document.getElementById('milk-slider');
+            const foamSlider = document.getElementById('foam-slider');
+
+            if (milkSlider) milkSlider.value = currentRecipe.milkOz || 0;
+            if (foamSlider) foamSlider.value = currentRecipe.foam || 0;
+
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = (currentRecipe.milkOz || 0).toFixed(1);
+
+            // Update milk buttons
+            document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const milkBtn = document.getElementById('milk-' + (currentRecipe.milkType || 'whole'));
+            if (milkBtn) milkBtn.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            // Size
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+            const sbtn = document.getElementById('size-' + (currentRecipe.size || 'grande'));
+            if (sbtn) sbtn.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+
+            // shots + powder + water + sugar
+            const shotsEl = document.getElementById('shots-count');
+            if (shotsEl) shotsEl.textContent = currentRecipe.shots || 2;
+            const pEl = document.getElementById('powder-milkPowderTbsp');
+            if (pEl) pEl.textContent = currentRecipe.milkPowderTbsp || 0;
+            const waterVal = document.getElementById('water-oz-value');
+            if (waterVal) waterVal.textContent = (currentRecipe.dilutionWaterOz || 0).toFixed(1);
+            const sugarEl = document.getElementById('sugar-tsp');
+            if (sugarEl) sugarEl.textContent = currentRecipe.sugarTsp || 0;
+
+            // Update syrup displays
+            Object.keys(currentRecipe.syrups).forEach(key => {
+                const el = document.getElementById('syrup-' + key);
+                if (el) el.textContent = currentRecipe.syrups[key];
+            });
+        }
+
+        function updatePreview() {
+            const cup = document.getElementById('coffee-cup');
+            const liquid = document.getElementById('coffee-liquid');
+            const foam = document.getElementById('coffee-foam');
+            const whip = document.getElementById('whip-cream');
+            const drizzle = document.getElementById('drizzle');
+
+            const r = currentRecipe;
+            let height = 55;
+            let color = '#3C2F2F';
+
+            // Bean influence
+            if (r.beans === 'ethiopian') color = '#4A3728';
+            if (r.beans === 'colombian' || r.beans === 'brazilian') color = '#5C4033';
+            if (r.beans === 'sumatran') color = '#3F2A1F';
+
+            if (r.base === 'coldbrew') color = '#4A6B8C';
+            if (r.base === 'brewed') color = '#6B4E31';
+
+            // Milk lightens (use milkOz, scale ~ milkOz / max ~18oz)
+            const milkScale = Math.min(100, (r.milkOz || 0) * 5.5);
+            if (r.milkType !== 'none' && r.milkOz > 0) {
+                if (milkScale > 70) color = '#C4A484';
+                else if (milkScale > 35) color = '#8B6F47';
+            }
+
+            // Chocolate darkens
+            if (r.syrups.mocha > 0 || r.syrups['white-mocha'] > 0) {
+                color = (milkScale > 40) ? '#5C4033' : '#3C2F2F';
+            }
+
+            if (r.extras.ice) {
+                cup.classList.add('iced');
+                color = '#6FA3C7';
+                // iced drinks show lower liquid fill + ice visual
+                foam.style.height = '3%';
+                document.getElementById('ice-cubes').classList.remove('hidden');
+            } else {
+                cup.classList.remove('iced');
+                document.getElementById('ice-cubes').classList.add('hidden');
+            }
+
+            const fillHeight = r.extras.ice ? (42 + Math.min(55, (r.milkOz || 0) * 2.8)) : (height + Math.min(55, (r.milkOz || 0) * 2.8));
+            liquid.style.height = fillHeight + '%';
+            liquid.style.background = `linear-gradient(to bottom, ${color}, ${color})`;
+
+            // Show grounds when little water has been added (user's "powder" stage)
+            const grounds = document.getElementById('coffee-grounds');
+            if (grounds) {
+                const waterAdded = r.dilutionWaterOz || 0;
+                const groundOpacity = Math.max(0.1, 0.7 - (waterAdded / 8));
+                grounds.style.opacity = groundOpacity;
+                grounds.style.height = (waterAdded < 2 ? '22%' : '8%');
+            }
+
+            // Foam (skip override if iced)
+            if (!r.extras.ice) {
+                foam.style.height = (r.foam * 0.42) + '%';
+                foam.classList.toggle('bubbles', r.foam > 25);
+            }
+
+            // Whip & drizzle
+            whip.classList.toggle('hidden', !r.extras.whip);
+            drizzle.classList.toggle('hidden', !r.extras.drizzle && !r.syrups.mocha && !r.syrups['white-mocha']);
+
+            // Labels
+            document.getElementById('preview-beans').textContent = r.beans.charAt(0).toUpperCase() + r.beans.slice(1);
+            document.getElementById('preview-milk').textContent = r.milkType === 'none' ? 'None' : r.milkType.charAt(0).toUpperCase() + r.milkType.slice(1);
+
+            const shotsNum = r.shots || (r.extras && r.extras['extra-shot'] ? 3 : 2);
+            const shotsText = (r.base === 'brewed' || r.base === 'coldbrew') ? '—' : (shotsNum + ' × ' + SHOT_OZ + 'oz');
+            document.getElementById('preview-shots').textContent = shotsText;
+            
+            document.getElementById('drink-name').textContent = generateDrinkName();
+            document.getElementById('starbucks-name').textContent = getStarbucksName();
+            const sizeEl = document.getElementById('preview-size');
+            if (sizeEl) sizeEl.textContent = (currentRecipe.size || 'grande').toUpperCase() + ' • ' + (currentRecipe.extras.ice ? 'Iced' : 'Hot');
+
+            // Build status to show what you've added so far
+            const statusEl = document.getElementById('build-status');
+            if (statusEl) {
+                let st = (r.beans || 'beans') + ' grounds';
+                const w = r.dilutionWaterOz || 0;
+                if (w > 0) st += ` + ${w.toFixed(1)}oz water`;
+                if ((r.sugarTsp || 0) > 0) st += ` + ${r.sugarTsp}tsp sugar`;
+                statusEl.textContent = st;
+            }
+        }
+
+        function generateDrinkName() {
+            const r = currentRecipe;
+            let name = '';
+
+            const hasMilk = r.milkType !== 'none' && (r.milkOz || 0) > 2;
+            const isLatteLike = hasMilk && (r.milkOz || 0) > 8 && r.foam < 35;
+            const isCappLike = hasMilk && r.foam > 45;
+            const hasSugar = (r.sugarTsp || 0) > 0;
+            const water = r.dilutionWaterOz || 0;
+            const shotsNum = r.shots || 2;
+
+            // Sweetener first
+            if (hasSugar) name = 'Sweetened ';
+
+            // Syrup prefix (Starbucks order: flavor first)
+            if (r.syrups.mocha > 0) name += 'Mocha ';
+            else if (r.syrups['white-mocha'] > 0) name += 'White Mocha ';
+            else if (r.syrups.caramel > 0) name += 'Caramel ';
+            else if (r.syrups.vanilla > 0) name += 'Vanilla ';
+            else if (r.syrups.hazelnut > 0) name += 'Hazelnut ';
+            else if (r.syrups['toffee-nut'] > 0) name += 'Toffee Nut ';
+            else if (r.syrups.peppermint > 0) name += 'Peppermint ';
+            else if (r.syrups['cinnamon-dolce'] > 0) name += 'Cinnamon Dolce ';
+
+            // Build base from what you actually added (beans + water amount)
+            if (r.base === 'espresso' || r.base === 'ristretto' || r.base === 'americano') {
+                if (r.base === 'ristretto') {
+                    name += 'Flat White';
+                } else if (isLatteLike) {
+                    name += 'Latte';
+                } else if (isCappLike) {
+                    name += 'Cappuccino';
+                } else if (hasMilk && (r.milkOz || 0) > 3) {
+                    name += 'Cortado';
+                } else if (water > 3) {
+                    // You added beans + shots + significant water → Americano
+                    name += 'Americano';
+                } else {
+                    // Little to no extra water → Espresso
+                    name += (shotsNum >= 2 ? 'Doppio' : 'Espresso');
+                }
+            } else if (r.base === 'coldbrew') {
+                name += 'Cold Brew';
+            } else if (r.base === 'brewed') {
+                name += 'Coffee';
+            } else {
+                name += 'Americano';
+            }
+
+            // If milk + coffee but not espresso base, still name it custom
+            if (!name.includes('Latte') && !name.includes('Cappuccino') && !name.includes('Flat') && hasMilk && (r.base === 'americano' || r.base === 'brewed')) {
+                name = (name.trim() ? name.trim() + ' ' : '') + 'Misto';
+            }
+
+            if (r.extras.ice && !name.startsWith('Iced')) name = 'Iced ' + name;
+            return name.trim();
+        }
+
+        function getStarbucksName() {
+            const r = currentRecipe;
+            let name = '';
+
+            const hasMilk = r.milkType !== 'none' && (r.milkOz || 0) > 2;
+            const isLatte = hasMilk && (r.milkOz || 0) > 8 && r.foam < 35;
+            const isCapp = hasMilk && r.foam > 45;
+            const water = r.dilutionWaterOz || 0;
+            const hasSugar = (r.sugarTsp || 0) > 0;
+
+            if (hasSugar) name = 'Sweetened ';
+
+            if (r.syrups.mocha > 0 && hasMilk) name += 'Caffè Mocha';
+            else if (r.syrups['white-mocha'] > 0 && hasMilk) name += 'White Chocolate Mocha';
+            else if ((r.syrups.caramel > 0 || r.syrups.vanilla > 0) && r.extras.drizzle) name += 'Caramel Macchiato';
+            else if (isLatte) name += 'Caffè Latte';
+            else if (isCapp) name += 'Cappuccino';
+            else if (r.base === 'ristretto') name += 'Flat White';
+            else if (r.base === 'coldbrew') name += 'Cold Brew';
+            else if (r.base === 'espresso' || r.base === 'americano') {
+                if (water > 3) name += 'Caffè Americano';
+                else name += (r.milkOz || 0) > 3 ? 'Espresso Macchiato' : 'Espresso';
+            } else {
+                name += r.base === 'brewed' ? 'Brewed Coffee' : 'Caffè Americano';
+            }
+
+            if (r.extras.ice) name = 'Iced ' + name;
+            return name;
+        }
+
+        function updateRecipeText() {
+            const ingEl = document.getElementById('recipe-ingredients');
+            const stepsEl = document.getElementById('recipe-steps');
+            const orderEl = document.getElementById('starbucks-order');
+            const r = currentRecipe;
+
+            const shotsNum = r.shots || (r.extras && r.extras['extra-shot'] ? 3 : 2);
+            const hasMilk = r.milkType !== 'none' && (r.milkOz || 0) > 1;
+            const hasPowder = (r.milkPowderTbsp || 0) > 0;
+            const isLatteLike = hasMilk && (r.milkOz || 0) > 8;
+            const isCappLike = hasMilk && r.foam > 45;
+
+            // Ingredients with real measurements - "what you added"
+            let ing = `<div><strong>${r.beans}</strong> grounds</div>`;
+
+            if (shotsNum > 0) {
+                ing += `<div>${shotsNum} shots pulled (${(shotsNum * SHOT_OZ).toFixed(1)} oz concentrate)</div>`;
+            }
+
+            const water = r.dilutionWaterOz || 0;
+            if (water > 0) {
+                ing += `<div>${water} fl oz hot water added</div>`;
+                if (water > 3) {
+                    ing += `<div class="text-[#6B4E31]">→ This makes it an Americano</div>`;
+                } else {
+                    ing += `<div class="text-[#6B4E31]">→ This is espresso strength</div>`;
+                }
+            }
+
+            if (r.sugarTsp > 0) {
+                ing += `<div>${r.sugarTsp} tsp sugar (sweetened)</div>`;
+            }
+
+            if (hasMilk) {
+                ing += `<div>${r.milkOz} fl oz ${r.milkType} milk</div>`;
+            }
+            if (r.foam > 10) {
+                const foamOz = (r.foam / 100 * 2.5).toFixed(1);
+                ing += `<div>${foamOz} oz microfoam</div>`;
+            }
+
+            Object.keys(r.syrups).forEach(key => {
+                if (r.syrups[key] > 0) {
+                    const oz = (r.syrups[key] * PUMP_OZ).toFixed(1);
+                    ing += `<div>${r.syrups[key]} pumps ${key} (~${oz} oz)</div>`;
+                }
+            });
+
+            if (hasPowder) ing += `<div>${r.milkPowderTbsp} tbsp milk powder</div>`;
+            if (r.extras.whip) ing += `<div>Whipped cream</div>`;
+            if (r.extras.drizzle) ing += `<div>Caramel drizzle</div>`;
+            if (r.extras['chocolate-drizzle']) ing += `<div>Mocha drizzle</div>`;
+            if (r.extras.decaf) ing += `<div>Decaf</div>`;
+            if (r.extras.ice) ing += `<div>Over ice</div>`;
+
+            ingEl.innerHTML = ing;
+
+            // Steps - built step by step like you described
+            let steps = [];
+            steps.push(`Add ${r.beans} grounds/powder`);
+
+            if (shotsNum > 0) {
+                steps.push(`Pull ${shotsNum} shots (${(shotsNum * SHOT_OZ).toFixed(1)} oz concentrate)`);
+            }
+
+            const water = r.dilutionWaterOz || 0;
+            if (water > 0) {
+                steps.push(`Add ${water} fl oz hot water`);
+                if (water > 3) steps.push('This turned it into an Americano');
+                else steps.push('This is espresso (little dilution)');
+            }
+
+            if (r.sugarTsp > 0) {
+                steps.push(`Add ${r.sugarTsp} tsp sugar → sweetened`);
+            }
+
+            if (hasPowder) {
+                steps.push(`Add ${r.milkPowderTbsp} tbsp milk powder`);
+            }
+
+            Object.keys(r.syrups).forEach(key => {
+                if (r.syrups[key] > 0) steps.push(`Add ${r.syrups[key]} pumps ${key} syrup`);
+            });
+
+            if (hasMilk) {
+                if (r.extras.ice) {
+                    steps.push(`Add ice + ${r.milkOz} fl oz ${r.milkType} milk`);
+                } else {
+                    steps.push(`Add/steam ${r.milkOz} fl oz ${r.milkType} milk`);
+                }
+            }
+
+            if (r.foam > 15) steps.push('Top with foam');
+            if (r.extras.whip) steps.push('Top with whipped cream');
+            if (r.extras.drizzle || r.extras['chocolate-drizzle']) steps.push('Add drizzle');
+
+            stepsEl.innerHTML = steps.map((s, i) => 
+                `<div class="flex gap-2"><span class="font-mono text-xs w-4">${i+1}.</span> <span>${s}</span></div>`
+            ).join('');
+
+            // Starbucks order text
+            let order = getStarbucksName();
+            if (r.milkType !== 'whole' && r.milkType !== 'none') order += ', ' + r.milkType;
+            if (r.extras['half-sweet']) order += ', half sweet';
+            if (shotsNum > 2) order += ', extra shot';
+            if (r.foam > 40 && !isCappLike) order += ', extra foam';
+            if (hasPowder) order += ', with milk powder';
+            orderEl.textContent = order + ' — ask for your customizations!';
+
+            // Add a learning note
+            let learnNote = document.getElementById('learn-note');
+            if (!learnNote) {
+                learnNote = document.createElement('div');
+                learnNote.id = 'learn-note';
+                learnNote.className = 'mt-3 text-[12px] text-[#6B4E31] bg-[#F8F1E9] px-3 py-1.5 rounded-2xl';
+                orderEl.parentNode.appendChild(learnNote);
+            }
+            let why = '';
+            if (hasPowder && r.milkOz === 0) why = 'Milk powder in a black Americano or cold brew adds creamy body and a bit of sweetness without liquid dairy. Stir well while hot.';
+            else if (isLatteLike && r.base.includes('espresso')) why = 'Milk-forward espresso drink: ~2 shots + 10–13 fl oz steamed milk + light foam = classic Caffè Latte.';
+            else if (isCappLike) why = 'More foam than milk: ~2 shots + equal milk + thick foam cap = Cappuccino.';
+            else if (r.base === 'ristretto' && hasMilk) why = 'Ristretto (shorter, sweeter 2 shots) + silky milk = velvety Flat White.';
+            else if (r.extras.ice && hasMilk) why = 'Iced drinks: milk + ice first, shots poured on top so flavors layer.';
+            else if (r.syrups.mocha > 0) why = 'Mocha = chocolate syrup/sauce + espresso + milk.';
+            else why = 'Fully custom — changing shots, milk volume (oz), or adding powder completely changes the drink.';
+            learnNote.innerHTML = `<strong>Why this drink / tip:</strong> ${why}`;
+        }
+
+        function updatePreviewFromInputs() {
+            currentRecipe.milkOz = parseFloat(document.getElementById('milk-slider').value);
+            currentRecipe.foam = parseInt(document.getElementById('foam-slider').value);
+            updateRecipe();
+        }
+
+        function loadStarbucksDrink(drinkKey) {
+            const drink = starbucksDrinks[drinkKey];
+            if (!drink) return;
+
+            // Start from full clean defaults, then override with drink (ensures all syrup keys + ice always present)
+            currentRecipe = {
+                beans: drink.beans || 'arabica',
+                base: drink.base,
+                size: drink.size || 'grande',
+                shots: drink.shots || (drink.base === 'espresso' || drink.base === 'ristretto' || drink.base === 'americano' ? 2 : 0),
+                dilutionWaterOz: drink.dilutionWaterOz || (drink.base === 'americano' ? 8 : 0),
+                milkType: drink.milkType || 'whole',
+                milkOz: drink.milkOz || 0,
+                foam: drink.foam || 0,
+                milkPowderTbsp: drink.milkPowderTbsp || 0,
+                sugarTsp: drink.sugarTsp || 0,
+                syrups: { vanilla: 0, caramel: 0, mocha: 0, 'white-mocha': 0, hazelnut: 0, 'cinnamon-dolce': 0, 'toffee-nut': 0, peppermint: 0 },
+                extras: { whip: false, drizzle: false, 'chocolate-drizzle': false, 'extra-shot': false, decaf: false, 'half-sweet': false, ice: false }
+            };
+            // Apply drink specifics (override)
+            if (drink.syrups) Object.assign(currentRecipe.syrups, drink.syrups);
+            if (drink.extras) Object.assign(currentRecipe.extras, drink.extras);
+
+            // Update UI selections
+            document.querySelectorAll('.beans-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const beanBtn = document.getElementById('beans-' + currentRecipe.beans);
+            if (beanBtn) beanBtn.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const baseBtn = document.getElementById('base-' + currentRecipe.base);
+            if (baseBtn) baseBtn.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const milkBtn = document.getElementById('milk-' + currentRecipe.milkType);
+            if (milkBtn) milkBtn.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            document.getElementById('milk-slider').value = currentRecipe.milkOz || 0;
+            document.getElementById('foam-slider').value = currentRecipe.foam;
+
+            const waterSld = document.getElementById('water-slider');
+            if (waterSld) waterSld.value = currentRecipe.dilutionWaterOz || 0;
+
+            // Sync oz value + shots + powder
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = (currentRecipe.milkOz || 0).toFixed(1);
+            const shotsEl = document.getElementById('shots-count');
+            if (shotsEl) shotsEl.textContent = currentRecipe.shots || 2;
+            const pEl = document.getElementById('powder-milkPowderTbsp');
+            if (pEl) pEl.textContent = currentRecipe.milkPowderTbsp || 0;
+            const sugarEl = document.getElementById('sugar-tsp');
+            if (sugarEl) sugarEl.textContent = currentRecipe.sugarTsp || 0;
+            const waterEl = document.getElementById('water-oz-value');
+            if (waterEl) waterEl.textContent = (currentRecipe.dilutionWaterOz || 0).toFixed(1);
+
+            const flab = document.getElementById('foam-level-label');
+            if (flab) flab.textContent = currentRecipe.foam > 45 ? 'Thick foam' : currentRecipe.foam > 20 ? 'Microfoam' : currentRecipe.foam > 5 ? 'Light' : 'None';
+
+            // Size buttons
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+            const sizeBtn = document.getElementById('size-' + (currentRecipe.size || 'grande'));
+            if (sizeBtn) sizeBtn.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+
+            // Reset all buttons visually
+            document.querySelectorAll('.extra-btn').forEach(b => b.classList.remove('bg-[#6B4E31]', 'text-white'));
+
+            // Set all syrup counters (0 for non-used) with measurement
+            Object.keys(currentRecipe.syrups).forEach(k => {
+                const el = document.getElementById('syrup-' + k);
+                const p = currentRecipe.syrups[k] || 0;
+                if (el) el.textContent = p + (p > 0 ? ` (~${(p * PUMP_OZ).toFixed(1)}oz)` : '');
+            });
+
+            // Activate extras that are true
+            Object.keys(currentRecipe.extras).forEach(k => {
+                const el = document.getElementById('extra-' + k);
+                if (el && currentRecipe.extras[k]) el.classList.add('bg-[#6B4E31]', 'text-white');
+            });
+
+            updateRecipe();
+        }
+
+        function updateRecipe() {
+            // keep measurement displays fresh
+            const sEl = document.getElementById('shots-count');
+            if (sEl) sEl.textContent = currentRecipe.shots || 2;
+            const pEl = document.getElementById('powder-milkPowderTbsp');
+            if (pEl) pEl.textContent = currentRecipe.milkPowderTbsp || 0;
+            const vEl = document.getElementById('milk-oz-value');
+            if (vEl) vEl.textContent = (currentRecipe.milkOz || 0).toFixed(1);
+
+            const wEl = document.getElementById('water-oz-value');
+            if (wEl) wEl.textContent = (currentRecipe.dilutionWaterOz || 0).toFixed(1);
+            const suEl = document.getElementById('sugar-tsp');
+            if (suEl) suEl.textContent = currentRecipe.sugarTsp || 0;
+
+            updatePreview();
+            updateRecipeText();
+        }
+
+        function brewCoffee() {
+            const modal = document.getElementById('brew-modal');
+            const r = currentRecipe;
+            const name = document.getElementById('drink-name').textContent;
+
+            document.getElementById('modal-name').textContent = name;
+            document.getElementById('modal-subtitle').textContent = getStarbucksName() + (r.extras.ice ? ' (Iced)' : '');
+
+            let steps = [];
+            const shotsNum = r.shots || (r.extras['extra-shot'] ? 3 : 2);
+
+            if (r.base === 'espresso' || r.base === 'ristretto') {
+                steps.push(`Pull ${shotsNum} ${r.extras.decaf ? 'decaf ' : ''}shots of ${r.base} (${(shotsNum * SHOT_OZ).toFixed(1)} oz)`);
+            } else if (r.base === 'coldbrew') {
+                steps.push('Pour cold brew concentrate');
+            } else if (r.base === 'americano') {
+                steps.push(`Pull ${shotsNum} shots, add hot water`);
+            } else {
+                steps.push('Brew fresh coffee');
+            }
+
+            if ((r.milkPowderTbsp || 0) > 0) {
+                steps.push(`Stir in ${r.milkPowderTbsp} tbsp milk powder`);
+            }
+
+            Object.keys(r.syrups).forEach(k => {
+                if (r.syrups[k] > 0) steps.push(`Add ${r.syrups[k]} pumps of ${k} syrup`);
+            });
+
+            if (r.milkType !== 'none' && r.milkOz > 0) {
+                if (r.extras.ice) steps.push(`Add ice + ${r.milkOz} fl oz ${r.milkType} milk`);
+                else steps.push(`Steam ${r.milkOz} fl oz ${r.milkType} milk to 150–160°F`);
+            }
+
+            if (r.foam > 15) steps.push('Add foam on top');
+            if (r.extras.whip) steps.push('Add whipped cream');
+            if (r.extras.drizzle || r.extras['chocolate-drizzle']) steps.push('Add drizzle on top');
+
+            document.getElementById('modal-steps').innerHTML = steps.map((s, i) => 
+                `<div class="flex gap-3"><div class="w-5 h-5 bg-[#6B4E31] text-white text-xs flex-shrink-0 flex items-center justify-center rounded-full">${i+1}</div><div>${s}</div></div>`
+            ).join('');
+
+            // Add quick why note at bottom of modal
+            let whyDiv = document.getElementById('modal-why');
+            if (!whyDiv) {
+                whyDiv = document.createElement('div');
+                whyDiv.id = 'modal-why';
+                whyDiv.className = 'mt-4 text-xs border-t pt-3 text-[#6B4E31]';
+                document.getElementById('modal-steps').parentNode.appendChild(whyDiv);
+            }
+            let whyText = 'Use exact oz / tbsp / pumps to replicate any drink or invent your own (e.g. Americano + 1 tbsp milk powder).';
+            const hasM = r.milkType !== 'none' && (r.milkOz || 0) > 2;
+            if (hasM && (r.milkOz || 0) > 8 && r.foam < 35 && (r.base === 'espresso' || r.base === 'ristretto')) whyText = 'High milk volume + low foam over espresso = Caffè Latte.';
+            else if (hasM && r.foam > 45) whyText = 'Lots of foam = Cappuccino.';
+            else if ((r.milkPowderTbsp || 0) > 0 && (r.milkOz || 0) < 2) whyText = 'Milk powder in an Americano or cold brew = creamy body with no liquid milk.';
+            whyDiv.innerHTML = '<strong>Starbucks build tip:</strong> ' + whyText;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeBrewModal() {
+            document.getElementById('brew-modal').classList.remove('flex');
+            document.getElementById('brew-modal').classList.add('hidden');
+        }
+
+        function saveRecipe() {
+            const defaultName = document.getElementById('drink-name').textContent || getStarbucksName();
+            const customName = prompt('Save recipe as (Starbucks-style name):', defaultName);
+            if (!customName) return;
+            const recipe = { ...currentRecipe, name: customName.trim(), savedAt: Date.now() };
+            savedRecipes.unshift(recipe);
+            localStorage.setItem('coffeeLabStarbucksRecipes', JSON.stringify(savedRecipes));
+            updateSavedUI();
+            alert('Saved! Open "My Recipes" to load or tweak it.');
+        }
+
+        function updateSavedUI() {
+            // This function is called from the header button to show modal with saved
+        }
+
+        function showSavedRecipes() {
+            if (savedRecipes.length === 0) {
+                alert('No saved recipes yet. Build something and save!');
+                return;
+            }
+
+            let html = '<div class="space-y-2 max-h-[340px] overflow-auto pr-1">';
+            savedRecipes.forEach((r, i) => {
+                const sizeLabel = r.size ? r.size.toUpperCase() : 'GRANDE';
+                const milk = r.milkType && r.milkType !== 'none' ? r.milkType : 'no milk';
+                html += `<div class="group flex items-center gap-2 cursor-pointer p-3 border rounded-2xl hover:bg-[#F8F1E9]" onclick="loadSavedRecipe(${i})">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold">${r.name}</div>
+                        <div class="text-xs text-[#6B4E31]">${sizeLabel} • ${r.beans} • ${r.base} • ${milk}</div>
+                    </div>
+                    <button onclick="event.stopImmediatePropagation(); deleteSavedRecipe(${i}, this);" class="text-red-400 hover:text-red-600 opacity-60 group-hover:opacity-100 px-1">×</button>
+                </div>`;
+            });
+            html += '</div>';
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-[999]';
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 w-full max-w-md mx-4" onclick="event.stopImmediatePropagation()">
+                    <div class="flex justify-between mb-4">
+                        <div class="font-bold text-xl">My Saved Recipes</div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-xl">×</button>
+                    </div>
+                    ${html}
+                    <div class="text-[10px] mt-3 text-[#6B4E31]">Click a recipe to load &amp; edit. Use × to delete.</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function deleteSavedRecipe(index, el) {
+            if (!confirm('Delete this saved recipe?')) return;
+            savedRecipes.splice(index, 1);
+            localStorage.setItem('coffeeLabStarbucksRecipes', JSON.stringify(savedRecipes));
+            // refresh modal
+            el.closest('.fixed')?.remove();
+            showSavedRecipes();
+        }
+
+        function loadSavedRecipe(index) {
+            const recipe = savedRecipes[index];
+            // migrate old milkAmount % -> milkOz
+            let migratedMilkOz = recipe.milkOz;
+            if (migratedMilkOz == null && recipe.milkAmount != null) {
+                migratedMilkOz = Math.round((recipe.milkAmount / 100) * 12);
+            }
+            currentRecipe = {
+                beans: recipe.beans || 'arabica',
+                base: recipe.base || 'espresso',
+                size: recipe.size || 'grande',
+                shots: recipe.shots || 2,
+                dilutionWaterOz: recipe.dilutionWaterOz || (recipe.base === 'americano' ? 8 : 0),
+                milkType: recipe.milkType || 'whole',
+                milkOz: migratedMilkOz != null ? migratedMilkOz : 10,
+                foam: recipe.foam || 25,
+                milkPowderTbsp: recipe.milkPowderTbsp || 0,
+                sugarTsp: recipe.sugarTsp || 0,
+                syrups: { vanilla: 0, caramel: 0, mocha: 0, 'white-mocha': 0, hazelnut: 0, 'cinnamon-dolce': 0, 'toffee-nut': 0, peppermint: 0, ...(recipe.syrups || {}) },
+                extras: { whip: false, drizzle: false, 'chocolate-drizzle': false, 'extra-shot': false, decaf: false, 'half-sweet': false, ice: false, ...(recipe.extras || {}) }
+            };
+            delete currentRecipe.name;
+            delete currentRecipe.savedAt;
+
+            // Re-apply UI
+            document.querySelectorAll('.beans-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const beanEl = document.getElementById('beans-' + currentRecipe.beans);
+            if (beanEl) beanEl.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const baseEl = document.getElementById('base-' + currentRecipe.base);
+            if (baseEl) baseEl.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            document.querySelectorAll('.milk-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]'));
+            const milkEl = document.getElementById('milk-' + currentRecipe.milkType);
+            if (milkEl) milkEl.classList.add('ring-2', 'ring-[#6B4E31]');
+
+            document.getElementById('milk-slider').value = currentRecipe.milkOz || 10;
+            document.getElementById('foam-slider').value = currentRecipe.foam || 25;
+
+            const wS = document.getElementById('water-slider');
+            if (wS) wS.value = currentRecipe.dilutionWaterOz || 0;
+            const wV = document.getElementById('water-oz-value');
+            if (wV) wV.textContent = (currentRecipe.dilutionWaterOz || 0).toFixed(1);
+            const sV = document.getElementById('sugar-tsp');
+            if (sV) sV.textContent = currentRecipe.sugarTsp || 0;
+
+            const valEl2 = document.getElementById('milk-oz-value');
+            if (valEl2) valEl2.textContent = (currentRecipe.milkOz || 10).toFixed(1);
+            const shotsEl2 = document.getElementById('shots-count');
+            if (shotsEl2) shotsEl2.textContent = currentRecipe.shots || 2;
+            const pEl2 = document.getElementById('powder-milkPowderTbsp');
+            if (pEl2) pEl2.textContent = currentRecipe.milkPowderTbsp || 0;
+
+            const waterVal2 = document.getElementById('water-oz-value');
+            if (waterVal2) waterVal2.textContent = (currentRecipe.dilutionWaterOz || 0).toFixed(1);
+            const sugarEl2 = document.getElementById('sugar-tsp');
+            if (sugarEl2) sugarEl2.textContent = currentRecipe.sugarTsp || 0;
+
+            const waterSlider2 = document.getElementById('water-slider');
+            if (waterSlider2) waterSlider2.value = currentRecipe.dilutionWaterOz || 0;
+
+            const flab2 = document.getElementById('foam-level-label');
+            if (flab2) flab2.textContent = (currentRecipe.foam||0) > 45 ? 'Thick foam' : (currentRecipe.foam||0) > 20 ? 'Microfoam' : (currentRecipe.foam||0) > 5 ? 'Light' : 'None';
+
+            // Size
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]'));
+            const sz = currentRecipe.size || 'grande';
+            const sBtn = document.getElementById('size-' + sz);
+            if (sBtn) sBtn.classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+
+            // water/sugar displays
+            const wSl2 = document.getElementById('water-slider');
+            if (wSl2) wSl2.value = currentRecipe.dilutionWaterOz || 0;
+
+            // Reset and set syrups/extras
+            document.querySelectorAll('.extra-btn').forEach(b => b.classList.remove('bg-[#6B4E31]', 'text-white'));
+            Object.keys(currentRecipe.extras || {}).forEach(k => {
+                const el = document.getElementById('extra-' + k);
+                if (el && currentRecipe.extras[k]) el.classList.add('bg-[#6B4E31]', 'text-white');
+            });
+
+            Object.keys(currentRecipe.syrups || {}).forEach(k => {
+                const el = document.getElementById('syrup-' + k);
+                const p = currentRecipe.syrups[k] || 0;
+                if (el) el.textContent = p + (p > 0 ? ` (~${(p * PUMP_OZ).toFixed(1)}oz)` : '');
+            });
+
+            document.querySelector('.fixed')?.remove(); // close modal if open
+            updateRecipe();
+        }
+
+        function updateSliders() {
+            const ms = document.getElementById('milk-slider');
+            const fs = document.getElementById('foam-slider');
+            const foamLabel = document.getElementById('foam-level-label');
+
+            // milk now uses oz + dedicated handler (updateMilkOzFromSlider)
+            ms.oninput = () => {
+                currentRecipe.milkOz = parseFloat(ms.value) || 0;
+                const valEl = document.getElementById('milk-oz-value');
+                if (valEl) valEl.textContent = currentRecipe.milkOz.toFixed(1);
+                updateRecipe();
+            };
+            fs.oninput = () => {
+                currentRecipe.foam = parseInt(fs.value);
+                if (foamLabel) {
+                    if (currentRecipe.foam < 10) foamLabel.textContent = 'None';
+                    else if (currentRecipe.foam < 25) foamLabel.textContent = 'Light';
+                    else if (currentRecipe.foam < 50) foamLabel.textContent = 'Microfoam';
+                    else foamLabel.textContent = 'Thick foam';
+                }
+                updateRecipe();
+            };
+
+            // water binding
+            const ws = document.getElementById('water-slider');
+            if (ws) {
+                ws.oninput = () => {
+                    currentRecipe.dilutionWaterOz = parseFloat(ws.value) || 0;
+                    const wval = document.getElementById('water-oz-value');
+                    if (wval) wval.textContent = currentRecipe.dilutionWaterOz.toFixed(1);
+                    updateRecipe();
+                };
+            }
+        }
+
+        function initializeUI() {
+            // Initial beans
+            document.getElementById('beans-arabica').classList.add('ring-2', 'ring-[#6B4E31]');
+
+            // Initial base
+            document.getElementById('base-espresso').classList.add('ring-2', 'ring-[#6B4E31]');
+
+            // Initial milk
+            document.getElementById('milk-whole').classList.add('ring-2', 'ring-[#6B4E31]');
+            document.getElementById('milk-slider').value = currentRecipe.milkOz || 12;
+
+            // Initial labels + new measurement displays
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = (currentRecipe.milkOz || 12).toFixed(1);
+            const shotsEl = document.getElementById('shots-count');
+            if (shotsEl) shotsEl.textContent = currentRecipe.shots || 2;
+            const pEl = document.getElementById('powder-milkPowderTbsp');
+            if (pEl) pEl.textContent = currentRecipe.milkPowderTbsp || 0;
+
+            // New water + sugar init
+            const waterSlider = document.getElementById('water-slider');
+            if (waterSlider) waterSlider.value = currentRecipe.dilutionWaterOz || 0;
+            const waterVal = document.getElementById('water-oz-value');
+            if (waterVal) waterVal.textContent = (currentRecipe.dilutionWaterOz || 0).toFixed(1);
+            const sugarEl = document.getElementById('sugar-tsp');
+            if (sugarEl) sugarEl.textContent = currentRecipe.sugarTsp || 0;
+
+            const fl = document.getElementById('foam-level-label');
+            if (fl) fl.textContent = currentRecipe.foam > 45 ? 'Thick foam' : currentRecipe.foam > 20 ? 'Microfoam' : currentRecipe.foam > 5 ? 'Light' : 'Light';
+
+            // Initial size (Grande default)
+            document.getElementById('size-grande').classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+
+            // Initial syrup displays (with measurement)
+            Object.keys(currentRecipe.syrups).forEach(k => {
+                const el = document.getElementById('syrup-' + k);
+                const p = currentRecipe.syrups[k] || 0;
+                if (el) el.textContent = p + (p > 0 ? ` (~${(p * PUMP_OZ).toFixed(1)}oz)` : '');
+            });
+
+            updateSliders();
+            updateRecipe();
+
+            // Demo: load a latte on start
+            setTimeout(() => {
+                loadStarbucksDrink('latte');
+            }, 650);
+        }
+
+        function resetAll() {
+            currentRecipe = {
+                beans: 'arabica',
+                base: 'espresso',
+                size: 'grande',
+                shots: 2,
+                dilutionWaterOz: 0,
+                milkType: 'whole',
+                milkOz: 12,
+                foam: 25,
+                milkPowderTbsp: 0,
+                sugarTsp: 0,
+                syrups: { vanilla: 0, caramel: 0, mocha: 0, 'white-mocha': 0, hazelnut: 0, 'cinnamon-dolce': 0, 'toffee-nut': 0, peppermint: 0 },
+                extras: { whip: false, drizzle: false, 'chocolate-drizzle': false, 'extra-shot': false, decaf: false, 'half-sweet': false, ice: false }
+            };
+
+            // Reset UI
+            document.querySelectorAll('.beans-btn, .base-btn, .milk-btn, .extra-btn, .size-btn').forEach(el => {
+                el.classList.remove('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]', 'bg-[#6B4E31]', 'text-white');
+            });
+
+            document.getElementById('beans-arabica').classList.add('ring-2', 'ring-[#6B4E31]');
+            document.getElementById('base-espresso').classList.add('ring-2', 'ring-[#6B4E31]');
+            document.getElementById('milk-whole').classList.add('ring-2', 'ring-[#6B4E31]');
+            document.getElementById('size-grande').classList.add('ring-2', 'ring-[#6B4E31]', 'border-[#6B4E31]');
+
+            document.getElementById('milk-slider').value = 12;
+            document.getElementById('foam-slider').value = 25;
+
+            const valEl = document.getElementById('milk-oz-value');
+            if (valEl) valEl.textContent = '12.0';
+            const shotsEl = document.getElementById('shots-count');
+            if (shotsEl) shotsEl.textContent = '2';
+            const pEl = document.getElementById('powder-milkPowderTbsp');
+            if (pEl) pEl.textContent = '0';
+
+            // reset new
+            const waterSlider = document.getElementById('water-slider');
+            if (waterSlider) waterSlider.value = 0;
+            const waterVal = document.getElementById('water-oz-value');
+            if (waterVal) waterVal.textContent = '0.0';
+            const sugarEl = document.getElementById('sugar-tsp');
+            if (sugarEl) sugarEl.textContent = '0';
+
+            const frl = document.getElementById('foam-level-label');
+            if (frl) frl.textContent = 'Microfoam';
+
+            Object.keys(currentRecipe.syrups).forEach(k => {
+                const el = document.getElementById('syrup-' + k);
+                if (el) el.textContent = '0';
+            });
+
+            updateRecipe();
+        }
+
+        // Initialize everything
+        window.onload = function() {
+            initTailwind();
+            initializeUI();
+            updateSavedUI(); // if you want to show count or something
+
+            // Keyboard support
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === "BODY") {
+                    e.preventDefault();
+                    const buf = document.querySelector('#activity-buffer, textarea');
+                    if (buf) buf.focus();
+                }
+            });
+
+            console.log('%c[Coffee Lab] Starbucks-style builder ready!', 'color:#6B4E31');
+        };
+
+        // Helper to keep syrup display updated (called from adjustSyrup)
+        window.updateSyrupDisplay = function() {
+            // already handled in adjustSyrup
+        };
+    </script>
+</body>
+</html>
